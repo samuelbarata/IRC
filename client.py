@@ -22,11 +22,15 @@ SERVER_OFF          = "The server will exit and you'll be disconnected automatic
 BAD_REQUEST         = "Bad Request, type HELP to see available commands"
 USER_UNKNOWN        = "User unregistered, you need to register before doing this action"
 USER_REGISTERED     = "You are already registered"
+IMBUSY              = "You are in the middle of a game"
+NO_ENV              = "You dont haveany invites pending"
+NO_TURN             = "Not your turn to play"
 
 #mensagens ok:
 SUC                 = "OK "
 REG_OK              = "Registado com sucesso"
 INVITE_OK           = "Waiting for reply..."
+INVITE_REC          = "You've been invited to play by {}"
 ACEPT               = "{} has acepted your request"
 REJECT              = "{} has rejected your request"
 WAITING_FOR_PLAY    = "Not your turn to play"
@@ -58,10 +62,11 @@ def process_input(server_msg):
 
     elif(server_msg[0]=="SUC"):
         if(server_msg[1]=="REG_OK"):
-            username=server_msg[2]
+            username='[' + server_msg[2].lower() + ']'
             print(REG_OK)
-        if(server_msg[1]=='INVITE_OK'):
+        elif(server_msg[1]=='INVITE_OK'):
             print(INVITE_OK)
+
 
 
 
@@ -72,8 +77,28 @@ def process_input(server_msg):
             print(REG_FAIL)
         elif(server_msg[1]=="USER_REGISTERED"):
             print(USER_REGISTERED)
+        elif(server_msg[1]=='USER_BUSY'):
+            print(USER_BUSY)
+        elif(server_msg[1]=='USER_UNKNOWN'):
+            print(USER_UNKNOWN)
+        elif(server_msg[1]=='IMBUSY'):
+            print(IMBUSY)
+        elif(server_msg[1]=='NO_USER'):
+            print(NO_USER)
+        elif(server_msg[1]=='NO_ENV'):
+            print(NO_ENV)
+        elif(server_msg[1]=='NOT_IN_GAME'):
+            print(NOT_IN_GAME)
+        elif(server_msg[1]=='NO_TURN'):
+            print(NO_TURN)
 
-
+    
+    elif(server_msg[0]=="INVITE"):
+        print(INVITE_REC.format(server_msg[1]))
+        
+    elif(server_msg[0]=="GAME"):
+        if(server_msg[1]=="START"):
+            print("Game started against {}".format(server_msg[2]))
 
     elif(server_msg[0]=="BOARD"):
         board=eval(server_msg[1])
@@ -97,7 +122,7 @@ def process_input(server_msg):
         print("USER\t|\tSTATUS")
         for i in all_users:
             print("{}\t|\t{}".format(i[0], "available" if i[1] == 0 else "unavailable"))
-
+        print("\n")
 
     elif(server_msg[0]=="SERVER_OFF"):
         print('\n' + SERVER_OFF + '\n\n')
@@ -122,7 +147,7 @@ except:
 signal.signal(signal.SIGINT, exit_sig)
 inputs = [client, sys.stdin]
 message=''
-print(" COMMAND: ",  end='')
+print("COMMAND: ",  end='')
 sys.stdout.flush()
 while True:
     ins, outs, exs = select.select(inputs, [], [])
@@ -139,6 +164,6 @@ while True:
                 continue
             process_input(message)
             message=''
-            print("{} COMMAND: ".format(username), end='')
+            print("{}COMMAND: ".format(username), end='')
             sys.stdout.flush()
 

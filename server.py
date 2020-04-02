@@ -28,6 +28,8 @@ SERVER_OFF          = "The server will exit and you'll be disconnected automatic
 BAD_REQUEST         = "Bad Request, type HELP to see available commands\n"
 USER_UNKNOWN        = "User unregistered, you need to register before doing this action\n"
 USER_REGISTERED     = "You are already registered\n"
+IMBUSY              = "You're  in the middleof a game\n"
+NO_ENV              = ""
 
 #mensagens ok:
 SUC                 = "OK "
@@ -41,7 +43,16 @@ LOSE                = "Better luck next time\n"
 TIE                 = "Tie\n"
 DISPLAY             = "DISPLAY "
 
+
+EMPTY_BOARD=[[0,0,0],[0,0,0],[0,0,0]]
 users ={} #user: [socketfd, status, [game]]
+#status 0 = available
+#       1 = (in game) NOT USED
+#       2 = waiting for reply
+#       3 = invited
+#       4 = MY TURN
+#       5 = NOT MY TURN
+
 server = 0
 connections=[]
 
@@ -50,7 +61,7 @@ def help():
 #----
 
 def exit_server(sig, frame):
-    print("\nExiting server recieved signal {}, on {}...".format(sig, frame))
+    print("\nExiting server recieved signal {}...".format(sig))
     server.close()
     for c in connections:
         c.send("SERVER_OFF\n".encode())
@@ -62,7 +73,7 @@ def register(user, client):
     for i in users:
         if(users[i][0]==client):
             return "ERR USER_REGISTERED\n"
-    users[user]=[client, 0]
+    users[user]=[client, 0, ["quem convida", "convidado", ["jogo"]]]
     return "SUC REG_OK " +user + "\n"
 #----
 
@@ -70,19 +81,64 @@ def list():
     return "LIST " + str([(i, users[i][1]) for i in users]) + '\n'
 #----
 
-def invite(myself, user):
+def registered(socket):
     for i in users:
-        if(users[i][0] == myself):
-            myself=users[i]
-            break
-    if(myself not in users):
-        return ERR + USER_UNKNOWN
+        if(users[i][0]==socket):
+            return i
+    return 0
+
+
+def reply(responce, myself):
+    """
+    quem convida comeca
+    myself = convidado
+    other = primeiro a jogar
+    """
+
+    myself = registered(myself)
+    if(myself==0):
+        return "ERR USER_UNKNOWN\n"
+    if(users[myself][1]!=3):
+        return "ERR NO_ENV\n"
+    other = users[myself][2][0]
+    if(registered(other)==0):
+       users[myself][1]=0
+       return "ERR NO_USER\n"
+
+    if(responce=='ACCEPT'):
+        users[other][1]=4
+        users[myself][1]=5
+        users[myself][2][2]=users[other][2]=EMPTY_BOARD.copy()
+        users[other][0].send("GAME START {}".format(myself))
+        users[other][0].send("BOARD {}".format(users[other][2][2]))
+        return "GAME START {}\n".format(other)
+    elif(responce=='REJECT'):
+        user[other].send("REJECT\n")
+        users[other][1]=0
+        return "SUC\n"
+    else:
+        raise ValueError("NEVER HAPPENS")
+#----
+
+def play(x, y, myself, extra=0):
+    pass
+#----
+
+def invite(user, myself):
+    myself = registered(myself)
+    if(myself==0):
+        return "ERR USER_UNKNOWN\n"
+    if(users[myself][1]!=0):
+        return "ERR IMBUSY\n"
     if(user not in users):
-        return ERR + NO_USER
+        return "ERR NO_USER\n"
     if(users[user][1]!=0):
-        return ERR + USER_BUSY
-    users[myself][1]=1
-    users[user][0].send("INVITE {}".format(myself).encode())
+        return "ERR USER_BUSY\n"
+    users[myself][1]=2
+    users[user][1]=3
+    users[myself][2]=[myself, user, '?']
+    users[user][2]=[myself, user, '?']
+    users[user][0].send("INVITE {}\n".format(myself).encode())
     return "SUC INVITE_OK\n"
 #----
 
@@ -94,16 +150,22 @@ def process_input(msg, client):
 
     if(msg[0]=="HELP"):
         return help()
-    elif(msg[0]=="REGISTER"):
+    elif(msg[0]=="REGISTER" or msg[0]=='REG'):
         if(len(msg)==2):
             return register(msg[1], client)
-        else:
-            return ERR + BAD_REQUEST
     elif(msg[0]=="LIST"):
         if(len(msg)==1):
             return list()
-        else:
-            return ERR + BAD_REQUEST
+    elif(msg[0]=="INVITE"):
+        if(len(msg)==2):
+            return invite(msg[1], client)
+    elif(msg[0]=="PLAY"):
+        if(len(msg)==3):
+            return play(msg[1], msg[2], myself)
+    elif(msg[0]=='FOLD'):
+        return play(0,0,myself,1)
+    elif(msg[0]=="ACCEPT" or msg[0]=="REJECT"):
+         return reply(msg[0], client)
     elif(msg[0]=="EXIT"):
         raise socket.timeout()
 
@@ -112,7 +174,7 @@ def process_input(msg, client):
             pass
         else:
             return invite(msg[1])
-
+    
  
     return "ERR BAD_REQUEST\n"
 #----
