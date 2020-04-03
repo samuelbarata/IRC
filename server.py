@@ -88,7 +88,7 @@ def registered(socket):
         if(users[i][0]==socket):
             return i
     return 0
-
+#----
 
 def reply(responce, myself):
     """
@@ -112,9 +112,9 @@ def reply(responce, myself):
         users[myself][1]=5
         users[myself][2][2]=EMPTY_BOARD.copy()
         users[other][2][2]=users[myself][2][2]
-        users[other][0].send("SUC START {}\n".format(myself).encode())
+        users[other][0].send("GAME START {}\n".format(myself).encode())
         users[other][0].send("BOARD 1 {}\n".format(users[other][2][2]).encode())
-        users[myself][0].send("SUC START {}\n".format(other).encode())
+        users[myself][0].send("GAME START {}\n".format(other).encode())
         return "BOARD 0 {}\n".format(users[myself][2][2])
     elif(responce=='REJECT'):
         users[other].send("SUC REJECT {}\n".format(myself).encode())
@@ -148,11 +148,57 @@ def play(x, y, myself, extra=0):
         play=2  #O
 
     users[myself][2][2][y][x]=play
-    users[myself][1]=5
-    users[other][1]=4
-    users[other][0].send("BOARD 1 {}\n".format(users[other][2][2]).encode())
-    return "BOARD 0 {}\n".format(users[myself][2][2])
+    estado=check(myself)
+    
+    otherStatus=1
+    myStatus=0
+
+    if(myself==1):  #myself ganhou
+        users[myself][1]=0
+        users[other][1]=0
+        users[myself][0].send("GAME WIN\n".encode())
+        users[other][0].send("GAME LOSE\n".encode())
+        otherStatus=2
+        myStatus=2
+    elif(myself==2):  #empate
+        users[myself][1]=0
+        users[other][1]=0
+        users[myself][0].send("GAME TIE\n".encode())
+        users[other][0].send("GAME TIE\n".encode())
+        otherStatus=2
+        myStatus=2
+    else:
+        users[myself][1]=5
+        users[other][1]=4
+    
+    users[other][0].send("BOARD {} {}\n".format(otherStatus, users[other][2][2]).encode())
+    return "BOARD {} {}\n".format(myStatus, users[myself][2][2])
 #----
+
+def check(user):
+    """
+    0=jogo
+    1=vitoria
+    2=empate
+    """
+    board=users[user][2][2]
+    if(board[0][0]==board[0][1]==board[0][2] or \
+       board[1][0]==board[1][1]==board[1][2] or\
+       board[2][0]==board[2][1]==board[2][2] or\
+       board[0][0]==board[1][0]==board[2][0] or\
+       board[0][1]==board[1][1]==board[2][1] or\
+       board[0][2]==board[1][2]==board[2][2] or\
+       board[0][0]==board[1][1]==board[2][2]):
+        return 1
+
+    for a in range(len(3)):
+        for b in range(len(3)):
+            if(board[a][b] == 0):
+                return 0
+    
+    return 2
+#----
+
 
 def invite(user, myself):
     myself = registered(myself)
@@ -217,10 +263,7 @@ def handle_client_connection(client_sock):
                 if(not msg_from_client):
                     raise socket.timeout()
                 request += str(msg_from_client.decode())
-            
-            request=request.split('\n')
-            for i in request:
-                client_sock.send(process_input(i, client_sock).encode())
+            client_sock.send(process_input(request, client_sock).encode())
     except socket.timeout:
         for i in users:
             if(users[i][0]==client_sock):
