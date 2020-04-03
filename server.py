@@ -45,6 +45,7 @@ DISPLAY             = "DISPLAY "
 
 
 EMPTY_BOARD=[[0,0,0],[0,0,0],[0,0,0]]
+EMPTY_LINE=[0,0,0]
 users ={} #user: [socketfd, status, [game]]
 #status 0 = available
 #       1 = (in game) NOT USED
@@ -110,15 +111,16 @@ def reply(responce, myself):
     if(responce=='ACCEPT'):
         users[other][1]=4
         users[myself][1]=5
-        users[myself][2][2]=EMPTY_BOARD.copy()
+        users[myself][2][2]=[EMPTY_LINE.copy(), EMPTY_LINE.copy(), EMPTY_LINE.copy()]
         users[other][2][2]=users[myself][2][2]
         users[other][0].send("GAME START {}\n".format(myself).encode())
         users[other][0].send("BOARD 1 {}\n".format(users[other][2][2]).encode())
         users[myself][0].send("GAME START {}\n".format(other).encode())
         return "BOARD 0 {}\n".format(users[myself][2][2])
     elif(responce=='REJECT'):
-        users[other].send("SUC REJECT {}\n".format(myself).encode())
+        users[other][0].send("SUC REJECT {}\n".format(myself).encode())
         users[other][1]=0
+        users[myself][1]=0
         return "SUC\n"
     else:
         raise ValueError("NEVER HAPPENS")
@@ -148,19 +150,19 @@ def play(x, y, myself, extra=0):
         play=2  #O
 
     users[myself][2][2][y][x]=play
-    estado=check(myself)
+    estado=check(myself) 
     
     otherStatus=1
     myStatus=0
 
-    if(myself==1):  #myself ganhou
+    if(estado==1):  #myself ganhou
         users[myself][1]=0
         users[other][1]=0
         users[myself][0].send("GAME WIN\n".encode())
         users[other][0].send("GAME LOSE\n".encode())
         otherStatus=2
         myStatus=2
-    elif(myself==2):  #empate
+    elif(estado==2):  #empate
         users[myself][1]=0
         users[other][1]=0
         users[myself][0].send("GAME TIE\n".encode())
@@ -182,20 +184,19 @@ def check(user):
     2=empate
     """
     board=users[user][2][2]
-    if(board[0][0]==board[0][1]==board[0][2] or \
-       board[1][0]==board[1][1]==board[1][2] or\
-       board[2][0]==board[2][1]==board[2][2] or\
-       board[0][0]==board[1][0]==board[2][0] or\
-       board[0][1]==board[1][1]==board[2][1] or\
-       board[0][2]==board[1][2]==board[2][2] or\
-       board[0][0]==board[1][1]==board[2][2]):
+    if(board[0][0]==board[0][1]==board[0][2]!=0 or \
+       board[1][0]==board[1][1]==board[1][2]!=0 or\
+       board[2][0]==board[2][1]==board[2][2]!=0 or\
+       board[0][0]==board[1][0]==board[2][0]!=0 or\
+       board[0][1]==board[1][1]==board[2][1]!=0 or\
+       board[0][2]==board[1][2]==board[2][2]!=0 or\
+       board[0][0]==board[1][1]==board[2][2]!=0):
         return 1
 
-    for a in range(len(3)):
-        for b in range(len(3)):
+    for a in range(3):
+        for b in range(3):
             if(board[a][b] == 0):
-                return 0
-    
+                return 0 
     return 2
 #----
 

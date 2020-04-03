@@ -112,9 +112,9 @@ def process_input(server_msg):
 
     elif(server_msg[0]=="BOARD"):
         if(server_msg[1]=='1'):
-            print("Your turn to play\n")
+            print("\n\nYour turn to play\n")
         elif(server_msg[1]=='0'):
-            print("Waiting for oponent...\n")
+            print("\n\nWaiting for oponent...\n")
         board=eval(original[8::])
         for i in range(len(board)):
             for k in range(len(board[i])):
@@ -124,8 +124,8 @@ def process_input(server_msg):
                     board[i][k]='X'
                 else:
                     board[i][k]='O'
-        print("   0   1   2  \n"\
-            "0  {} | {} | {} \n".format(board[0][0], board[0][1], board[0][2])\
+        print("\n   0   1   2  \n"\
+            +"0  {} | {} | {} \n".format(board[0][0], board[0][1], board[0][2])\
             +HLINE\
             +"1  {} | {} | {} \n".format(board[1][0], board[1][1], board[1][2])\
             +HLINE\
