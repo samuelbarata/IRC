@@ -1,7 +1,7 @@
 #!/bin/python3
 import socket, signal, sys, select
 
-server_ip = [socket.gethostbyname("samuel.freetcp.com"), "127.0.0.1", "192.168.1.42"]
+server_ip = [socket.gethostbyname("samuel.freetcp.com"), "127.0.0.1", "192.168.1.5"]
 server_port = 45080
 server = -1
 MSG_SIZE = 1024

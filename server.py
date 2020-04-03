@@ -220,10 +220,11 @@ def invite(user, myself):
 
 def process_input(msg, client):
     msg=msg.upper()
+    msg=msg[:-1:]
     msg=msg.split(" ")
     print("Recieved >{}<".format(msg))
 
-    if(msg[0]=="HELP"):
+    if(msg[0]=="HELP" or msg[0]=='?'):
         return help()
     elif(msg[0]=="REGISTER" or msg[0]=='REG'):
         if(len(msg)==2):
