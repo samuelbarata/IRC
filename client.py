@@ -5,7 +5,7 @@ server_ip = [socket.gethostbyname("samuel.freetcp.com"), "127.0.0.1", "192.168.1
 server_port = 45080
 server = -1
 MSG_SIZE = 1024
-HLINE="{}{}{}{}{}{}{}{}{}{}{}\n".format(chr(9472), chr(9472), chr(9472),chr(9532),chr(9472), chr(9472),
+HLINE="  {}{}{}{}{}{}{}{}{}{}{}\n".format(chr(9472), chr(9472), chr(9472),chr(9532),chr(9472), chr(9472),
                                       chr(9472),chr(9532), chr(9472), chr(9472), chr(9472))
 username=''
 
@@ -23,21 +23,23 @@ BAD_REQUEST         = "Bad Request, type HELP to see available commands"
 USER_UNKNOWN        = "User unregistered, you need to register before doing this action"
 USER_REGISTERED     = "You are already registered"
 IMBUSY              = "You are in the middle of a game"
-NO_ENV              = "You dont haveany invites pending"
+NO_ENV              = "You dont have any invites pending"
 NO_TURN             = "Not your turn to play"
+
+
 
 #mensagens ok:
 SUC                 = "OK "
 REG_OK              = "Registado com sucesso"
 INVITE_OK           = "Waiting for reply..."
-INVITE_REC          = "You've been invited to play by {}"
+INVITE_REC          = "You've been invited to play by {} ACCEPT | REJECT"
 ACEPT               = "{} has acepted your request"
 REJECT              = "{} has rejected your request"
 WAITING_FOR_PLAY    = "Not your turn to play"
 WIN                 = "Congratulations, you have won"
 LOSE                = "Better luck next time"
 TIE                 = "Tie"
-
+START               = "Game started against {}"
 
 def exit_sig(sig=0, frame=0):
     client.close()
@@ -49,15 +51,11 @@ def process_input(server_msg):
     Recieves the server Message, returned value will be sent to server
     """
     global username
-    server_msg=server_msg[:-1:]         #retira o \n
     original=server_msg
     server_msg=server_msg.split(" ")    #separa por args
 
     if(server_msg[0]=="DISPLAY"):
-        for i in range(1,len(server_msg)):
-            print(server_msg[i] + " ", end="")
-        print("\n")
-
+        print(original[8::])
 
 
     elif(server_msg[0]=="SUC"):
@@ -66,7 +64,10 @@ def process_input(server_msg):
             print(REG_OK)
         elif(server_msg[1]=='INVITE_OK'):
             print(INVITE_OK)
-
+        elif(server_msg[1]=='REJECT'):
+            print(REJECT.format(server_msg[2]))
+        elif(server_msg[1]=='START'):
+            print(START.format(server_msg[2]))
 
 
 
@@ -91,17 +92,23 @@ def process_input(server_msg):
             print(NOT_IN_GAME)
         elif(server_msg[1]=='NO_TURN'):
             print(NO_TURN)
+        elif(server_msg[1]=='REG_FAIL'):
+            print(REG_FAIL)
+        elif(server_msg[1]=='INVALID_PLAY'):
+            print(INVALID_PLAY.format(server_msg[2], server_msg[3], server_msg[4]))
 
     
     elif(server_msg[0]=="INVITE"):
         print(INVITE_REC.format(server_msg[1]))
-        
-    elif(server_msg[0]=="GAME"):
-        if(server_msg[1]=="START"):
-            print("Game started against {}".format(server_msg[2]))
+
+
 
     elif(server_msg[0]=="BOARD"):
-        board=eval(server_msg[1])
+        if(server_msg[1]=='1'):
+            print("Your turn to play\n")
+        else:
+            print("Waiting for oponent...\n")
+        board=eval(original[8::])
         for i in range(len(board)):
             for k in range(len(board[i])):
                 if(board[i][k]==0):
@@ -110,12 +117,12 @@ def process_input(server_msg):
                     board[i][k]='X'
                 else:
                     board[i][k]='O'
-        print(\
-            " {} | {} | {} \n".format(board[0][0], board[0][1], board[0][2])\
+        print("   0   1   2  \n"\
+            "0  {} | {} | {} \n".format(board[0][0], board[0][1], board[0][2])\
             +HLINE\
-            +" {} | {} | {} \n".format(board[1][0], board[1][1], board[1][2])\
+            +"1  {} | {} | {} \n".format(board[1][0], board[1][1], board[1][2])\
             +HLINE\
-            +" {} | {} | {} \n".format(board[2][0], board[2][1], board[2][2]))
+            +"2  {} | {} | {} \n".format(board[2][0], board[2][1], board[2][2]))
 
     elif(server_msg[0]=="LIST"):
         all_users=eval(original[5::])
@@ -162,7 +169,9 @@ while True:
             message+=str(server_msg.decode())
             if(message[-1]!='\n'):
                 continue
-            process_input(message)
+            message=message.split('\n')
+            for k in message:
+                process_input(k)
             message=''
             print("{}COMMAND: ".format(username), end='')
             sys.stdout.flush()

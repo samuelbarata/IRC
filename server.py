@@ -73,6 +73,8 @@ def register(user, client):
     for i in users:
         if(users[i][0]==client):
             return "ERR USER_REGISTERED\n"
+    if(user in users):
+        return "ERR REG_FAIL\n"
     users[user]=[client, 0, ["quem convida", "convidado", ["jogo"]]]
     return "SUC REG_OK " +user + "\n"
 #----
@@ -101,19 +103,21 @@ def reply(responce, myself):
     if(users[myself][1]!=3):
         return "ERR NO_ENV\n"
     other = users[myself][2][0]
-    if(registered(other)==0):
+    if(other not in users):
        users[myself][1]=0
        return "ERR NO_USER\n"
 
     if(responce=='ACCEPT'):
         users[other][1]=4
         users[myself][1]=5
-        users[myself][2][2]=users[other][2]=EMPTY_BOARD.copy()
-        users[other][0].send("GAME START {}".format(myself))
-        users[other][0].send("BOARD {}".format(users[other][2][2]))
-        return "GAME START {}\n".format(other)
+        users[myself][2][2]=EMPTY_BOARD.copy()
+        users[other][2][2]=users[myself][2][2]
+        users[other][0].send("SUC START {}\n".format(myself).encode())
+        users[other][0].send("BOARD 1 {}\n".format(users[other][2][2]).encode())
+        users[myself][0].send("SUC START {}\n".format(other).encode())
+        return "BOARD 0 {}\n".format(users[myself][2][2])
     elif(responce=='REJECT'):
-        user[other].send("REJECT\n")
+        users[other].send("SUC REJECT {}\n".format(myself).encode())
         users[other][1]=0
         return "SUC\n"
     else:
@@ -121,7 +125,33 @@ def reply(responce, myself):
 #----
 
 def play(x, y, myself, extra=0):
-    pass
+    myself=registered(myself)
+    if(myself==0):
+        return "ERR USER_UNKNOWN\n"
+    if(users[myself][1]==0 or users[myself][1]==2 or users[myself][1]==3):
+        return "ERR NOT_IN_GAME\n"
+    if(users[myself][1]==5):
+        return "ERR NO_TURN\n"
+    x=int(x)
+    y=int(y)
+    if(not (0<=x<=2 and 0<=y<=2)):
+        return "ERR INVALID_COOR\n"
+
+    if(users[myself][2][2][y][x]!=0):
+        return "ERR INVALID_PLAY {} {} {}\n".format(y,x,"X" if users[myself][2][2][y][x]==1 else "O")
+
+    other=users[myself][2][0]
+    play=1      #X
+    
+    if(other==myself):
+        other=users[myself][2][1]
+        play=2  #O
+
+    users[myself][2][2][y][x]=play
+    users[myself][1]=5
+    users[other][1]=4
+    users[other][0].send("BOARD 1 {}\n".format(users[other][2][2]).encode())
+    return "BOARD 0 {}\n".format(users[myself][2][2])
 #----
 
 def invite(user, myself):
@@ -143,7 +173,6 @@ def invite(user, myself):
 #----
 
 def process_input(msg, client):
-    msg=msg[:-1:] #retira o \n
     msg=msg.upper()
     msg=msg.split(" ")
     print("Recieved >{}<".format(msg))
@@ -153,27 +182,22 @@ def process_input(msg, client):
     elif(msg[0]=="REGISTER" or msg[0]=='REG'):
         if(len(msg)==2):
             return register(msg[1], client)
-    elif(msg[0]=="LIST"):
+    elif(msg[0]=="LIST" or msg[0]=='LS'):
         if(len(msg)==1):
             return list()
-    elif(msg[0]=="INVITE"):
+    elif(msg[0]=="INVITE" or msg[0]=='INV'):
         if(len(msg)==2):
             return invite(msg[1], client)
     elif(msg[0]=="PLAY"):
         if(len(msg)==3):
-            return play(msg[1], msg[2], myself)
+            return play(msg[1], msg[2], client)
     elif(msg[0]=='FOLD'):
         return play(0,0,myself,1)
     elif(msg[0]=="ACCEPT" or msg[0]=="REJECT"):
          return reply(msg[0], client)
-    elif(msg[0]=="EXIT"):
+    elif(msg[0]=="EXIT" or  msg[0]=='X'):
         raise socket.timeout()
 
-    elif(msg[0]=="INVITE"):
-        if(len(msg)!=2):
-            pass
-        else:
-            return invite(msg[1])
     
  
     return "ERR BAD_REQUEST\n"
@@ -193,11 +217,18 @@ def handle_client_connection(client_sock):
                 if(not msg_from_client):
                     raise socket.timeout()
                 request += str(msg_from_client.decode())
-                
-            client_sock.send(process_input(request, client_sock).encode())
+            
+            request=request.split('\n')
+            for i in request:
+                client_sock.send(process_input(i, client_sock).encode())
     except socket.timeout:
         for i in users:
             if(users[i][0]==client_sock):
+                if(users[i][1]!=0):
+                    other=users[i][2][0]
+                    if(other==i):
+                        other=users[i][2][1]
+                    users[other][1]=0
                 del(users[i])
                 break
         for i in range(len(connections)):
