@@ -66,9 +66,16 @@ def process_input(server_msg):
             print(INVITE_OK)
         elif(server_msg[1]=='REJECT'):
             print(REJECT.format(server_msg[2]))
-        elif(server_msg[1]=='START'):
-            print(START.format(server_msg[2]))
 
+    elif(server_msg[0]=='GAME'):
+        if(server_msg[1]=='START'):
+            print(START.format(server_msg[2]))
+        elif(server_msg[1]=='WIN'):
+            print(WIN)
+        elif(server_msg[1]=='LOSE'):
+            print(LOSE)
+        elif(server_msg[1]=='TIE'):
+            print(TIE)
 
 
     elif(server_msg[0]=="ERR"):
@@ -106,7 +113,7 @@ def process_input(server_msg):
     elif(server_msg[0]=="BOARD"):
         if(server_msg[1]=='1'):
             print("Your turn to play\n")
-        else:
+        elif(server_msg[1]=='0'):
             print("Waiting for oponent...\n")
         board=eval(original[8::])
         for i in range(len(board)):
