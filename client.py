@@ -1,7 +1,7 @@
 #!/bin/python3
 import socket, signal, sys, select
 
-server_ip = [socket.gethostbyname("samuel.freetcp.com"), "127.0.0.1", "192.168.1.5"]
+server_ip = [socket.gethostbyname("samuel.freetcp.com"), "127.0.0.1"]
 server_port = 45080
 server = -1
 MSG_SIZE = 1024
@@ -15,7 +15,7 @@ REG_FAIL            = "Username already in use, pick a different username"
 NO_USER             = "No such user exists, LIST all users and pick a valid user"
 USER_BUSY           = "User is busy, LIST all users to check their status"
 INVALID_COOR        = "Invalid Coordinates, valid {0,1,2}"
-INVALID_PLAY        = "{} already has {}"
+INVALID_PLAY        = "{} {} already has {}"
 USER_DISCONECTED    = "Oponent has left the game, you win"
 NOT_IN_GAME         = "This command is only valid during a game type HELP to see how to start a new game"
 SERVER_OFF          = "The server will exit and you'll be disconnected automatically"
@@ -59,13 +59,14 @@ def process_input(server_msg):
 
 
     elif(server_msg[0]=="SUC"):
-        if(server_msg[1]=="REG_OK"):
-            username='[' + server_msg[2].lower() + ']'
-            print(REG_OK)
-        elif(server_msg[1]=='INVITE_OK'):
-            print(INVITE_OK)
-        elif(server_msg[1]=='REJECT'):
-            print(REJECT.format(server_msg[2]))
+        if(len(server_msg)>1):
+            if(server_msg[1]=="REG_OK"):
+                username='[' + server_msg[2].lower() + ']'
+                print(REG_OK)
+            elif(server_msg[1]=='INVITE_OK'):
+                print(INVITE_OK)
+            elif(server_msg[1]=='REJECT'):
+                print(REJECT.format(server_msg[2]))
 
     elif(server_msg[0]=='GAME'):
         if(server_msg[1]=='START'):
@@ -147,7 +148,7 @@ def process_input(server_msg):
 
 
 while(not 0<=server<len(server_ip)):
-    server = int(input("Select server:\n0: Remote Server\n1: Localhost\n2: VM\n"))
+    server = int(input("Select server:\n0: Remote Server\n1: Localhost\n"))
 
 client = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 
