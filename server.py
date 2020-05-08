@@ -1,4 +1,23 @@
 #!/bin/python3
+
+###################################################################################################
+# RELATÓRIO:
+# 
+# Adicionar capa
+# Fazer time diagrams mais bonitos OU fazer maquina de estados [melhor mais mais trabalhosa]
+# 
+# TODO:
+# 
+# podia ter um "contador" de convites pendentes que era mostrado na UI do user ao pé do seu nome
+# adicionar opção de cancelar um convite para poder convidar outra pessoa
+# adicionar opção de mostrar de quem é o convite pendente
+# Notificar utilizador se convite cancelado?
+# 
+# FIXME:
+# 
+# 
+###################################################################################################
+
 import socket, sys, threading, signal, os
 from threading import RLock
 
