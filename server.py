@@ -16,34 +16,6 @@ bind_port       = 45080
 #       FOLD                -- desiste do jogo atual
 #       EXIT                -- sai da aplicacao
 
-#mensagens erro:
-ERR                 = "ERROR "
-REG_FAIL            = "Username already in use, pick a different one\n"
-NO_USER             = "No such user exists, LIST all users and pick a valid user\n"
-USER_BUSY           = "User is busy, LIST all users to check their status\n"
-INVALID_COOR        = "Invalid Coordinates, valid {0,1,2}\n"
-INVALID_PLAY        = "{} already has {}\n"
-USER_DISCONECTED    = "Oponent has left the game, you win\n"
-NOT_IN_GAME         = "This command is only valid during a game type HELP to see how to start a new game\n"
-SERVER_OFF          = "The server will exit and you'll be disconnected automatically\n"
-BAD_REQUEST         = "Bad Request, type HELP to see available commands\n"
-USER_UNKNOWN        = "User unregistered, you need to register before doing this action\n"
-USER_REGISTERED     = "You are already registered\n"
-IMBUSY              = "You're  in the middleof a game\n"
-NO_ENV              = ""
-
-#mensagens ok:
-SUC                 = "OK "
-REG_OK              = "Registado com sucesso\n"
-INVITE_OK           = "Waiting for reply...\n"
-ACEPT               = "{} has acepted your request\n"
-REJECT              = "{} has rejected your request\n"
-WAITING_FOR_PLAY    = "Not your turn to play\n"
-WIN                 = "Congratulations, you have won\n"
-LOSE                = "Better luck next time\n"
-TIE                 = "Tie\n"
-DISPLAY             = "DISPLAY "
-
 
 EMPTY_BOARD=[[0,0,0],[0,0,0],[0,0,0]]
 EMPTY_LINE=[0,0,0]
@@ -156,7 +128,7 @@ def play(x, y, myself, extra=0):
     other=users[myself][2][0]
     play=1      #X
     
-    if(extra!=0):
+    if(extra!=0 and users[myself][1]!=0):
         users[myself][1]=0
         users[other][1]=0
         if(extra==1):

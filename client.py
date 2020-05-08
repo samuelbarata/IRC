@@ -16,24 +16,23 @@ NO_USER             = "No such user exists, LIST all users and pick a valid user
 USER_BUSY           = "User is busy, LIST all users to check their status"
 INVALID_COOR        = "Invalid Coordinates, valid range {0,1,2}"
 INVALID_PLAY        = "Position {}x{} already has {}"
-USER_DISCONECTED    = "Oponent has left the game, you win"
+USER_DISCONECTED    = "Opponent has left the game, you win"
 NOT_IN_GAME         = "This command is only valid during a game type HELP to see how to start a new game"
-SERVER_OFF          = "The server will exit and you'll be disconnected automatically"
+SERVER_OFF          = "The server will exit, and you'll be disconnected automatically"
 BAD_REQUEST         = "Bad Request, type HELP to see available commands"
 USER_UNKNOWN        = "User unregistered, you need to register before doing this action"
 USER_REGISTERED     = "You are already registered"
 IMBUSY              = "You are in the middle of a game"
-NO_ENV              = "You dont have any invites pending"
+NO_ENV              = "You don't have any invites pending"
 NO_TURN             = "Not your turn to play"
-BAD_FORMAT          = "Command is badly formated, type '?' for more information"
+BAD_FORMAT          = "Command is badly formatted, type '?' for more information"
 
 
 #mensagens ok:
 SUC                 = "OK "
-REG_OK              = "Registado com sucesso"
+REG_OK              = "User successfully registered"
 INVITE_OK           = "Waiting for reply..."
 INVITE_REC          = "You've been invited to play by {} ACCEPT | REJECT"
-ACCEPT              = "{} has acepted your request"
 REJECT              = "{} has rejected your request"
 WAITING_FOR_PLAY    = "Not your turn to play"
 WIN                 = "Congratulations, you have won"
@@ -112,6 +111,8 @@ def process_input(server_msg):
             print(BAD_FORMAT)
         elif(server_msg[1]=='INVALID_COOR'):
             print(INVALID_COOR)
+        elif(server_msg[1]=='USER_DISCONECTED'):
+            print(USER_DISCONECTED)
 
     
     elif(server_msg[0]=="INVITE"):
@@ -138,7 +139,7 @@ def process_input(server_msg):
             rows, columns = os.popen('stty size', 'r').read().split()
             rows = int(rows)
             columns = int(columns)
-            tmp=(columns-14)/2
+            tmp=int((columns-13)/2)
             for i in range(tmp):
                 spacer+=" "
         except:
