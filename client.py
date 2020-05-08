@@ -1,5 +1,5 @@
 #!/bin/python3
-import socket, signal, sys, select
+import socket, signal, sys, select, os
 
 server_ip = [socket.gethostbyname("samuel.freetcp.com"), "127.0.0.1"]
 server_port = 45080
@@ -14,8 +14,8 @@ ERR                 = "ERROR "
 REG_FAIL            = "Username already in use, pick a different username"
 NO_USER             = "No such user exists, LIST all users and pick a valid user"
 USER_BUSY           = "User is busy, LIST all users to check their status"
-INVALID_COOR        = "Invalid Coordinates, valid {0,1,2}"
-INVALID_PLAY        = "{} {} already has {}"
+INVALID_COOR        = "Invalid Coordinates, valid range {0,1,2}"
+INVALID_PLAY        = "Position {}x{} already has {}"
 USER_DISCONECTED    = "Oponent has left the game, you win"
 NOT_IN_GAME         = "This command is only valid during a game type HELP to see how to start a new game"
 SERVER_OFF          = "The server will exit and you'll be disconnected automatically"
@@ -25,7 +25,7 @@ USER_REGISTERED     = "You are already registered"
 IMBUSY              = "You are in the middle of a game"
 NO_ENV              = "You dont have any invites pending"
 NO_TURN             = "Not your turn to play"
-
+BAD_FORMAT          = "Command is badly formated, type '?' for more information"
 
 
 #mensagens ok:
@@ -33,13 +33,14 @@ SUC                 = "OK "
 REG_OK              = "Registado com sucesso"
 INVITE_OK           = "Waiting for reply..."
 INVITE_REC          = "You've been invited to play by {} ACCEPT | REJECT"
-ACEPT               = "{} has acepted your request"
+ACCEPT              = "{} has acepted your request"
 REJECT              = "{} has rejected your request"
 WAITING_FOR_PLAY    = "Not your turn to play"
 WIN                 = "Congratulations, you have won"
 LOSE                = "Better luck next time"
 TIE                 = "Tie"
 START               = "Game started against {}"
+FOLD                = "{} has droped out of the game"
 
 def exit_sig(sig=0, frame=0):
     client.close()
@@ -55,7 +56,8 @@ def process_input(server_msg):
     server_msg=server_msg.split(" ")    #separa por args
 
     if(server_msg[0]=="DISPLAY"):
-        print(original[8::])
+        print(original[8::].replace(';', '\n'))
+
 
 
     elif(server_msg[0]=="SUC"):
@@ -77,6 +79,8 @@ def process_input(server_msg):
             print(LOSE)
         elif(server_msg[1]=='TIE'):
             print(TIE)
+        elif(server_msg[1]=='FOLD'):
+            print(FOLD.format(server_msg[2]))
 
 
     elif(server_msg[0]=="ERR"):
@@ -104,6 +108,10 @@ def process_input(server_msg):
             print(REG_FAIL)
         elif(server_msg[1]=='INVALID_PLAY'):
             print(INVALID_PLAY.format(server_msg[2], server_msg[3], server_msg[4]))
+        elif(server_msg[1]=='BAD_FORMAT'):
+            print(BAD_FORMAT)
+        elif(server_msg[1]=='INVALID_COOR'):
+            print(INVALID_COOR)
 
     
     elif(server_msg[0]=="INVITE"):
@@ -125,12 +133,22 @@ def process_input(server_msg):
                     board[i][k]='X'
                 else:
                     board[i][k]='O'
-        print("\n   0   1   2  \n"\
-            +"0  {} | {} | {} \n".format(board[0][0], board[0][1], board[0][2])\
-            +HLINE\
-            +"1  {} | {} | {} \n".format(board[1][0], board[1][1], board[1][2])\
-            +HLINE\
-            +"2  {} | {} | {} \n".format(board[2][0], board[2][1], board[2][2]))
+        try:
+            spacer=""
+            rows, columns = os.popen('stty size', 'r').read().split()
+            rows = int(rows)
+            columns = int(columns)
+            tmp=(columns-14)/2
+            for i in range(tmp):
+                spacer+=" "
+        except:
+            pass
+        print("\n{}   0   1   2  \n".format(spacer)\
+            +"{}0  {} | {} | {} \n".format(spacer,board[0][0], board[0][1], board[0][2])\
+            +spacer+HLINE\
+            +"{}1  {} | {} | {} \n".format(spacer,board[1][0], board[1][1], board[1][2])\
+            +spacer+HLINE\
+            +"{}2  {} | {} | {} \n".format(spacer,board[2][0], board[2][1], board[2][2]))
 
     elif(server_msg[0]=="LIST"):
         all_users=eval(original[5::])
