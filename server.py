@@ -9,9 +9,7 @@
 # TODO:
 # 
 # podia ter um "contador" de convites pendentes que era mostrado na UI do user ao pé do seu nome
-# adicionar opção de cancelar um convite para poder convidar outra pessoa
 # adicionar opção de mostrar de quem é o convite pendente
-# Notificar utilizador se convite cancelado?
 # 
 # FIXME:
 # 
@@ -45,6 +43,11 @@ users ={} #user: [socketfd, status, [game]]
 #       3 = invited
 #       4 = MY TURN
 #       5 = NOT MY TURN
+
+#extra:
+#   0   normal play
+#   1   fold
+#   2   disconnect
 
 server = 0
 connections=[]
@@ -93,6 +96,28 @@ def registered(socket):
     return 0
 #----
 
+def logout(client_sock):
+    myself = registered(client_sock)
+    if(myself==0):
+        return "ERR USER_UNKNOWN\n"
+    if(users[myself][1]!=0):
+        play(0,0,client_sock,2) #send user disconected signal to game handler
+    del(users[myself])
+    return "SUC DISCONNECT\n"
+    
+#----
+
+def cancel(client_sock):
+    myself = registered(client_sock)
+    if(myself==0):
+        return "ERR USER_UNKNOWN\n"
+    if(users[myself][1]!=2):
+        return "ERR NO_INV\n"
+    if(users[myself][1]!=0):
+        play(0,0,client_sock,2)
+    return "SUC CANCEL\n"
+#----
+
 def reply(responce, myself):
     """
     quem convida comeca
@@ -132,7 +157,7 @@ def play(x, y, myself, extra=0):
     myself=registered(myself)
     if(myself==0):
         return "ERR USER_UNKNOWN\n"
-    if(users[myself][1]==0 or users[myself][1]==2 or users[myself][1]==3):
+    if(users[myself][1] in (0,2,3) and extra in (0,1)):
         return "ERR NOT_IN_GAME\n"
     if(users[myself][1]==5 and extra==0):
         return "ERR NO_TURN\n"
@@ -146,20 +171,23 @@ def play(x, y, myself, extra=0):
 
     other=users[myself][2][0]
     play=1      #X
-    
-    if(extra!=0 and users[myself][1]!=0):
-        users[myself][1]=0
-        users[other][1]=0
-        if(extra==1):
-            users[other][0].send("GAME FOLD {}\n".format(myself).encode())
-        elif(extra==2):
-            users[other][0].send("ERR USER_DISCONECTED\n".encode())
-        return "GAME LOSE\n"
-
-
     if(other==myself):
         other=users[myself][2][1]
         play=2  #O
+    
+    if(extra!=0 and users[myself][1]!=0):
+        if(extra==2 and users[myself][1] in (2,3)):
+            users[other][0].send("DISPLAY Invite Expired\n".encode())
+            
+        elif(extra==1 and users[myself][1] in (1,4,5)):
+            users[other][0].send("GAME FOLD {}\n".format(myself).encode())
+
+        elif(extra==2 and users[myself][1] in (1,4,5)):
+            users[other][0].send("ERR USER_DISCONECTED\n".encode())
+
+        users[myself][1]=0
+        users[other][1]=0
+        return "GAME LOSE\n"
 
     users[myself][2][2][y][x]=play
     estado=check(myself) 
@@ -271,8 +299,10 @@ def process_input(msg, client):
          return reply(msg[0], client)
     elif(msg[0]=="EXIT" or  msg[0]=='X'):
         raise socket.timeout()
-
-    
+    elif(msg[0]=="LOGOUT" or msg[0]=='OUT'):
+        return logout(client)
+    elif(msg[0]=='CANCEL'):
+        return cancel(client)    
  
     return "ERR BAD_REQUEST\n"
 #----

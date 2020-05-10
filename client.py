@@ -7,6 +7,7 @@ server = -1
 MSG_SIZE = 1024
 HLINE="  {}{}{}{}{}{}{}{}{}{}{}\n".format(chr(9472), chr(9472), chr(9472),chr(9532),chr(9472), chr(9472),
                                       chr(9472),chr(9532), chr(9472), chr(9472), chr(9472))
+VLINE=chr(9474)
 username=''
 
 #mensagens erro:
@@ -24,9 +25,9 @@ USER_UNKNOWN        = "User unregistered, you need to register before doing this
 USER_REGISTERED     = "You are already registered"
 IMBUSY              = "You are in the middle of a game"
 NO_ENV              = "You don't have any invites pending"
+NO_INV              = "You haven't sent any invitation yet"
 NO_TURN             = "Not your turn to play"
 BAD_FORMAT          = "Command is badly formatted, type '?' for more information"
-
 
 #mensagens ok:
 SUC                 = "OK "
@@ -39,7 +40,9 @@ WIN                 = "Congratulations, you have won"
 LOSE                = "Better luck next time"
 TIE                 = "Tie"
 START               = "Game started against {}"
-FOLD                = "{} has droped out of the game"
+FOLD                = "{} has dropped out of the game"
+DISCONNECT          = "User Logged Out"
+CANCEL              = "Invite canceled"
 
 def exit_sig(sig=0, frame=0):
     client.close()
@@ -68,6 +71,9 @@ def process_input(server_msg):
                 print(INVITE_OK)
             elif(server_msg[1]=='REJECT'):
                 print(REJECT.format(server_msg[2]))
+            elif(server_msg[1]=='DISCONNECT'):
+                print(DISCONNECT)
+                username=''
 
     elif(server_msg[0]=='GAME'):
         if(server_msg[1]=='START'):
@@ -145,11 +151,11 @@ def process_input(server_msg):
         except:
             pass
         print("\n{}   0   1   2  \n".format(spacer)\
-            +"{}0  {} | {} | {} \n".format(spacer,board[0][0], board[0][1], board[0][2])\
+            +"{}0  {} {} {} {} {} \n".format(spacer,board[0][0],VLINE, board[0][1],VLINE, board[0][2])\
             +spacer+HLINE\
-            +"{}1  {} | {} | {} \n".format(spacer,board[1][0], board[1][1], board[1][2])\
+            +"{}1  {} {} {} {} {} \n".format(spacer,board[1][0],VLINE, board[1][1],VLINE, board[1][2])\
             +spacer+HLINE\
-            +"{}2  {} | {} | {} \n".format(spacer,board[2][0], board[2][1], board[2][2]))
+            +"{}2  {} {} {} {} {} \n".format(spacer,board[2][0],VLINE, board[2][1],VLINE, board[2][2]))
 
     elif(server_msg[0]=="LIST"):
         all_users=eval(original[5::])
