@@ -28,6 +28,7 @@ NO_ENV              = "You don't have any invites pending"
 NO_INV              = "You haven't sent any invitation yet"
 NO_TURN             = "Not your turn to play"
 BAD_FORMAT          = "Command is badly formatted, type '?' for more information"
+YSELF               = "You've played yourself"
 
 #mensagens ok:
 SUC                 = "OK "
@@ -119,6 +120,8 @@ def process_input(server_msg):
             print(INVALID_COOR)
         elif(server_msg[1]=='USER_DISCONECTED'):
             print(USER_DISCONECTED)
+        elif(server_msg[1]=='YSELF'):
+            print(YSELF)
 
     
     elif(server_msg[0]=="INVITE"):

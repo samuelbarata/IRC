@@ -248,6 +248,8 @@ def invite(user, myself):
         return "ERR USER_UNKNOWN\n"
     if(users[myself][1]!=0):
         return "ERR IMBUSY\n"
+    if(user==myself):
+        return "ERR YSELF\n"
     if(user not in users):
         return "ERR NO_USER\n"
     if(users[user][1]!=0):
