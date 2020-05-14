@@ -25,7 +25,7 @@ USER_UNKNOWN        = "User unregistered, you need to register before doing this
 USER_REGISTERED     = "You are already registered"
 IMBUSY              = "You are in the middle of a game"
 NO_ENV              = "You don't have any invites pending"
-NO_INV              = "You haven't sent any invitation yet"
+NO_INV              = "You haven't sent an invitation yet"
 NO_TURN             = "Not your turn to play"
 BAD_FORMAT          = "Command is badly formatted, type '?' for more information"
 YSELF               = "You've played yourself"
@@ -122,6 +122,8 @@ def process_input(server_msg):
             print(USER_DISCONECTED)
         elif(server_msg[1]=='YSELF'):
             print(YSELF)
+        elif(server_msg[1]=='NO_INV'):
+            print(NO_INV)
 
     
     elif(server_msg[0]=="INVITE"):
