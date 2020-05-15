@@ -1,21 +1,5 @@
 #!/bin/python3
 
-###################################################################################################
-# RELATÓRIO:
-# 
-# Adicionar capa
-# Fazer time diagrams mais bonitos OU fazer maquina de estados [melhor mais mais trabalhosa]
-# 
-# TODO:
-# 
-# podia ter um "contador" de convites pendentes que era mostrado na UI do user ao pé do seu nome
-# adicionar opção de mostrar de quem é o convite pendente
-# 
-# FIXME:
-# 
-# 
-###################################################################################################
-
 import socket, sys, threading, signal, os
 from threading import RLock
 
@@ -32,6 +16,8 @@ bind_port       = 45080
 #       PLAY <x> <y>        -- joga na posicao X Y
 #       FOLD                -- desiste do jogo atual
 #       EXIT                -- sai da aplicacao
+#       LOGOUT              -- desregista utilizador
+#       CANCEL              -- cancela um pedido enviado pelo utilizador
 
 
 EMPTY_BOARD=[[0,0,0],[0,0,0],[0,0,0]]
@@ -63,7 +49,9 @@ def help():
             "REJECT\t\t\tDeclines a current invitation to play;"+\
             "PLAY <x> <y>\t\tPlay in selected cell;"+\
             "FOLD\t\t\tFolds the current game;"+\
-            "EXIT\t\t\tLeaves the game\n"
+            "EXIT\t\t\tLeaves the game;"+\
+            "LOGOUT\t\tLogs out current user;"+\
+            "CANCEL\t\tCancels an outgoing invitation\n"
 #----
 
 def exit_server(sig, frame):
